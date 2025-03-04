@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Productos en Tiempo Real</title>
+</head>
+<body>
+  <h1>Productos en Tiempo Real</h1>
+  <ul id="productos-lista">
+    {{#each productos}}
+      <li data-id="{{this.id}}">{{this.name}} - {{this.price}}</li>
+    {{/each}}
+  </ul>
+
+  <h2>Añadir Producto</h2>
+  <form id="form-agregar-producto">
+    <input type="text" id="nombre" placeholder="Nombre del producto" required>
+    <input type="number" id="precio" placeholder="Precio del producto" required>
+    <button type="submit">Agregar</button>
+  </form>
+
+  <h2>Eliminar Producto</h2>
+  <form id="form-eliminar-producto">
+    <input type="text" id="id-eliminar" placeholder="ID del producto" required>
+    <button type="submit">Eliminar</button>
+  </form>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+
+    const listaProductos = document.getElementById('productos-lista');
+    const formAgregar = document.getElementById('form-agregar-producto');
+    const formEliminar = document.getElementById('form-eliminar-producto');
+
+    formAgregar.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const nombre = document.getElementById('nombre').value;
+      const precio = document.getElementById('precio').value;
+      socket.emit('agregarProducto', { name: nombre, price: precio });
+      formAgregar.reset();
+    });
+
+    formEliminar.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const id = document.getElementById('id-eliminar').value;
+      socket.emit('eliminarProducto', id);
+      formEliminar.reset();
+    });
+
+    socket.on('productoAgregado', (producto) => {
+      const item = document.createElement('li');
+      item.setAttribute('data-id', producto.id);
+      item.textContent = `${producto.name} - ${producto.price}`;
+      listaProductos.appendChild(item);
+    });
+
+    socket.on('productoEliminado', (id) => {
+      const item = listaProductos.querySelector(`li[data-id='${id}']`);
+      if (item) {
+        listaProductos.removeChild(item);
+      }
+    });
+  </script>
+</body>
+</html>
+
+<h1>Lista de Productos en Tiempo Real</h1>
+<ul id="lista-productos"></ul>
+
+<h2>Agregar Producto</h2>
+<form id="formulario-producto">
+    <input type="text" id="nombreProducto" placeholder="Nombre del producto" required>
+    <input type="number" id="precioProducto" placeholder="Precio" required>
+    <button type="submit">Agregar</button>
+</form>
+
+<h2>Eliminar Producto</h2>
+<form id="formulario-eliminar">
+    <input type="number" id="idProducto" placeholder="ID del producto" required>
+    <button type="submit">Eliminar</button>
+</form>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    const socket = io();
+
+    const listaProductos = document.getElementById('lista-productos');
+    const formularioProducto = document.getElementById('formulario-producto');
+    const formularioEliminar = document.getElementById('formulario-eliminar');
+
+    
+    socket.on('productosActualizados', (productos) => {
+        listaProductos.innerHTML = ''; 
+        productos.forEach((producto, index) => {
+            const li = document.createElement('li');
+            li.textContent = `ID: ${index} - ${producto.nombre} - $${producto.precio}`;
+            listaProductos.appendChild(li);
+        });
+    });
+
+    
+    formularioProducto.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const nombre = document.getElementById('nombreProducto').value;
+        const precio = document.getElementById('precioProducto').value;
+        socket.emit('nuevoProducto', { id: Date.now(), nombre, precio });
+        formularioProducto.reset();
+    });
+
+    
+    formularioEliminar.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const id = parseInt(document.getElementById('idProducto').value);
+        socket.emit('eliminarProducto', id);
+        formularioEliminar.reset();
+    });
+</script>
+

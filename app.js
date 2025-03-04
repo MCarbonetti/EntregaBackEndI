@@ -123,4 +123,41 @@ app.use('/api/products', productRouter);
 app.use('/api/carts', cartRouter);
 
 
-app.listen(PORT, () => console.log(`Servidor corriendo en el puerto ${PORT}`));
+const http = require('http');
+const { Server } = require('socket.io');
+
+const server = http.createServer(app); 
+const io = new Server(server); 
+
+io.on('connection', (socket) => {
+    console.log('Un cliente se ha conectado');
+});
+
+server.listen(3000, () => {
+    console.log("Servidor escuchando en el puerto 3000");
+});
+
+
+const express = require('express');
+const { create } = require('express-handlebars');
+const path = require('path');
+
+const hbs = create({
+    extname: '.handlebars',
+    defaultLayout: 'main',
+});
+
+app.engine('.handlebars', hbs.engine);
+app.set('view engine', '.handlebars');
+app.set('views', path.join(__dirname, 'views'));
+
+const productos = []; 
+
+app.get('/home', (req, res) => {
+    res.render('home', { productos });
+});
+
+app.get('/realtimeproducts', (req, res) => {
+    res.render('realTimeProducts', { productos });
+});
+
